@@ -10,10 +10,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 df <- readRDS("CSM_data.RDS")
-
+library(tidyverse)
+# install.packages("gplots")
+library("gplots")
 ```
-I) Jobb értékelést (Ratings) kapnak a sorozatok az onallo filmekkel szemben?
-A kérdés megválaszolásához az alábbi hipotéziseket állítottam fel:
+*I) Jobb értékelést (Ratings) kapnak a sorozatok az onallo filmekkel szemben?
+A kérdés megválaszolásához az alábbi hipotéziseket állítottam fel:*
 $$ H_1: \mu_s > \mu_o , \space H_0: \mu_s \leq \mu_o $$
 A próba elvégzéséhez feltétel a csoportok normális eloszlása, illetve a szórások egyezősége. Ehhez manuálisan megnézzük a két csoport szórását, de F-próbát is végrehajtjuk.
 
@@ -37,6 +39,41 @@ F_prob
 ```
 Mivel az F-próba p-értéke nagyobb (utolsó adat), mint a választott szignifikanciaszint (1%), ezért azt a nullhipotézist, miszerint a két csoport szórása megegyezik elfogadjuk (nem tudjuk elvetni). A normalitásra is elvégeztem a megfelelő tesztet, amik hipotézisét ismét elfogadom, tehát normális eloszlást követ mindkét csoport ratingje. Tovább térhetünk a tesztre.
 ```{r}
-t.test(x = df$Ratings [df$onallo == 1],y = df$Ratings [df$onallo == 0],alternative = "less",var.equal = T)
+t_prob <- t.test(x = df$Ratings [df$onallo == 1],y = df$Ratings [df$onallo == 0],alternative = "less",var.equal = T)
+t <- t_prob[["statistic"]][["t"]]
+r <- sqrt ( t^2 / (t^2 + t_prob[["parameter"]][["df"]]) )
+t_prob
+t
+r
 ```
-A nullhipotézist nem tudtuk elvetni, így 1%-os szignifikanciaszinten azt tudjuk mondani, hogy a sorozatok átlagos értékelései nem szignifikánsan nagyobbak, mint az önálló filmeké.
+A nullhipotézist nem tudtuk elvetni, így 1%-os szignifikanciaszinten azt tudjuk mondani, hogy a sorozatok átlagos értékelései nem szignifikánsan nagyobbak, mint az önálló filmeké. Ezt az ellenőrzést grafikusan is elvégeztem, ahol látszik, hogy a két megoszlás átlaga körülbelül megegyezik. A próba hatásmérete kicsi, csupán 0.024 értéket mutat, de mivel nem volt szignifikáns a p-érték, ezért ez nem meglepő.
+```{r}
+ggplot2::ggplot(df)+
+  geom_histogram(aes(x=Ratings))+
+  facet_grid(rows=vars(onallo))+
+  labs(title = "Az önálló (1) és sorozatban (0) lévő filmek értékelésének eloszlása")
+
+```
+
+*II) Van-e szignifikans kapcsolat a film mufaja (Genre) es akozott, hogy a film onallo vagy sem (sorozat)? Szignifikans kapcsolat eseten jellemezd a kapcsolat erosseget is! A megfelelo statisztikai proba mellett, az dontes alatamasztasahoz szukseges abrat is keszitsd el!*
+A feladat megoldásához először egy gyakorisági táblázatot kell készíteni:
+```{r}
+freq <- table(df$Genre, df$onallo)
+freq
+```
+Ezután meg kell jegyeznünk, hogy a legkisebb értéknek legalább 5-nek kell lennie. Láthatjuk, hogy ez nem teljesül, így pontatlan lesz a khínégyzetünk. Ezzel a fenntartással kell tovább vizsgálódnunk. A gyakorisági táblát ábrán is megjelenítettem.
+```{r}
+balloonplot(freq, main ="Genre és Önálló változó együttes megoszlása", xlab ="", ylab="",
+            label = FALSE, show.margins = FALSE)
+```
+Ezután meghatároztam a szakmai hipotéziseket:
+$$ H_0: f_{ij} = f_{ij}^* \space minden \space i,j-re, \space illetve\space H_1: a \space két\space változó\space nem \space független$$
+```{r}
+chisq <- chisq.test(freq)
+chisq
+```
+Ahogy azt a program is kiírja "Chi-squared approximation may be incorrect", a becslés nem pontos, és pont az ilyen esetekben, amikor a p-érték a választott szignifikancia körül van nem tudunk dönteni. A problémát nagyobb mintával, vagy a "Genre" változó kisebb számú kategóriás megválasztásával lehetne orvosolni.
+
+*III) Van-e szignifikans kapcsolat akozott, hogy hany szazaleknak tetszett (rel_tetszett) a film es a Rating kozott? Szignifikans kapcsolat eseten jellemezd a kapcsolat erosseget is 99%-os megbízhatósággal! A megfelelo statisztikai proba mellett, a dontes alatamasztasahoz szukseges abrat is keszitsd el!*
+
+
