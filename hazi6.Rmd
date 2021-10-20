@@ -1,0 +1,42 @@
+---
+title: "hazi6_Natália"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+df <- readRDS("CSM_data.RDS")
+
+```
+I) Jobb értékelést (Ratings) kapnak a sorozatok az onallo filmekkel szemben?
+A kérdés megválaszolásához az alábbi hipotéziseket állítottam fel:
+$$ H_1: \mu_s > \mu_o , \space H_0: \mu_s \leq \mu_o $$
+A próba elvégzéséhez feltétel a csoportok normális eloszlása, illetve a szórások egyezősége. Ehhez manuálisan megnézzük a két csoport szórását, de F-próbát is végrehajtjuk.
+
+```{r}
+onallo_norm <- shapiro.test(df$Ratings [df$onallo==1])$p.value
+sori_norm <- shapiro.test(df$Ratings [df$onallo==0])$p.value
+
+onallo_szor <- sd(df$Ratings [df$onallo == 1])
+sori_szor <- sd(df$Ratings [df$onallo == 0])
+F_prob <- var.test(df$Ratings [df$onallo == 1],df$Ratings [df$onallo == 0])$p.value
+names(onallo_szor) <- "Önállók szórása:"
+names(sori_szor) <- "Sorozatok szórása:"
+names(onallo_norm) <- "Önállók normalitástesztjének p-értéke:"
+names(sori_norm) <- "sorozatok normalitástesztjének p-értéke:"
+names(F_prob) <- "F-próba p-értéke:"
+onallo_norm
+sori_norm
+onallo_szor
+sori_szor
+F_prob
+```
+Mivel az F-próba p-értéke nagyobb (utolsó adat), mint a választott szignifikanciaszint (1%), ezért azt a nullhipotézist, miszerint a két csoport szórása megegyezik elfogadjuk (nem tudjuk elvetni). A normalitásra is elvégeztem a megfelelő tesztet, amik hipotézisét ismét elfogadom, tehát normális eloszlást követ mindkét csoport ratingje. Tovább térhetünk a tesztre.
+```{r}
+t.test(x = df$Ratings [df$onallo == 1],y = df$Ratings [df$onallo == 0],alternative = "less",var.equal = T)
+```
+A nullhipotézist nem tudtuk elvetni, így 1%-os szignifikanciaszinten azt tudjuk mondani, hogy a sorozatok átlagos értékelései nem szignifikánsan nagyobbak, mint az önálló filmeké.
