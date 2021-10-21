@@ -104,7 +104,21 @@ ggplot2::ggplot(df)+
   geom_smooth(aes(x = rel_tet, y= Ratings),method = lm)
 ```
 Ránézésre a két változó kapcsolata nem lineáris, ezt mutatja a trendvonal széles konfidencia intervalluma. A próba hatásmérete maga a korrelációs együttható (abszolút értéke), ami 40,8%, ami a közepesnél egy gyengébb hatás.
+
+###-------- szorgalmi
+a nem fehérek körében a demokrata szavazók aránya > 0,5
 ```{r}
-
+df2 <- gss_cat
+df2$white <- ifelse(df2$race == "White", 1, 0)
+df2$party4 <-  fct_collapse (df2$partyid ,
+                            
+ other = c("No answer" ,"Don't know" ,"Other party") ,       
+ rep = c("Strong republican" , "Not str republican" ,"Ind,near rep"),    
+ ind = c("Independent") ,       
+ dem = c ("Ind,near dem","Not str democrat" ,"Strong democrat")
+ 
+)
+table (df2$white , df2$party4)
+binom.test(3289, 1103+3289+591+105, alternative = "greater")$p.value
 ```
-
+Mivel a nullhipotézist elvetjük, ezért az alternatív hipotézist igazoljuk, miszerint a nemfehérek körében valóban a demokraták aránya nagyobb, mint 50%.
