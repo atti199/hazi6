@@ -75,5 +75,36 @@ chisq
 Ahogy azt a program is kiírja "Chi-squared approximation may be incorrect", a becslés nem pontos, és pont az ilyen esetekben, amikor a p-érték a választott szignifikancia körül van nem tudunk dönteni. A problémát nagyobb mintával, vagy a "Genre" változó kisebb számú kategóriás megválasztásával lehetne orvosolni.
 
 *III) Van-e szignifikans kapcsolat akozott, hogy hany szazaleknak tetszett (rel_tetszett) a film es a Rating kozott? Szignifikans kapcsolat eseten jellemezd a kapcsolat erosseget is 99%-os megbízhatósággal! A megfelelo statisztikai proba mellett, a dontes alatamasztasahoz szukseges abrat is keszitsd el!*
+A feltétele a próbának a két változó normalitása
+```{r}
+df$rel_tet <- (df$Likes /(df$Likes + df$Dislikes))
+shapiro.test(df$rel_tet)$p.value
+shapiro.test(df$Ratings)$p.value
 
+```
+A rel_tet esetében elvetjük, a Ratings esetében elfogadjuk a nullhipotézist, miszerint a változó normális eloszlást követ. Mivel 187 darab adatunk van, ezért a CLT szerint a mintaelemszám elég nagy ahhoz, hogy asszimptotikusan normális eloszlást kövessen. Továbbmehetünk a tesztre. A próba hipotézisei:
+$$H_0: a \space két \space változó\space között \space nincs \space lineáris\space kapcslat.\space H_1: a\space két\space változó\space között\space van \space lineáris\space kapcsolat.$$
+Ebben a feladatbaz az ábra egy scatterplot lesz trendvonallal. Ha a trendvonal meredeksége láthatóan eltér 0-tól, akkor kapcsolat létére számíthatunk. A teszt egy t-teszt lesz, aminek a képlete a következő:
+
+$$ t =\frac{r}{\sqrt{1-r^2}}\sqrt{n-2} \space, ahol\space t \space szabadságfoka \space n-2$$
+Az r, t értéke:
+```{r}
+r2 <- cor(df$Ratings, df$rel_tet)
+r2
+t2 <- r2*sqrt(187-2)/(sqrt(1-r2^2))
+t2
+qt(0.99, 185)
+qt(0.99, 185) > t2
+```
+A számokon láthatjuk, hogy a t próba értéke meghaladja a kritikusértéket, ezért elvetjük azt a H0-t, miszerint a két változó között nincs lineáris kapcsolat. Az ábra:
+
+```{r}
+ggplot2::ggplot(df)+
+  geom_point(aes(x = rel_tet, y = Ratings))+
+  geom_smooth(aes(x = rel_tet, y= Ratings),method = lm)
+```
+Ránézésre a két változó kapcsolata nem lineáris, ezt mutatja a trendvonal széles konfidencia intervalluma. A próba hatásmérete maga a korrelációs együttható (abszolút értéke), ami 40,8%, ami a közepesnél egy gyengébb hatás.
+```{r}
+
+```
 
